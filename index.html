@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyberLink - Free Image to Text Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: rgb(80, 80, 80);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #828282;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .language-selector {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 10px;
+        }
+
+        .language-selector label {
+            font-weight: bold;
+            color: #6e6e6e;
+            margin-right: 10px;
+        }
+
+        .language-selector select {
+            padding: 8px 15px;
+            border: 2px solid 6e6e6e;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        .upload-area {
+            border: 3px dashed #6e6e6e;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .upload-area:hover {
+            background: #f8f9ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #f0f4ff;
+            border-color: #333;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            background: rgb(0, 87, 128);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 10px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgb(0, 87, 128);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .files-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .files-preview.active {
+            display: grid;
+        }
+
+        .file-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .file-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .file-item .file-name {
+            padding: 8px;
+            background: #f8f9ff;
+            font-size: 0.85em;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status-message.active {
+            display: block;
+        }
+
+        .status-message.processing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .progress-container {
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-info {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .overall-progress {
+            width: 100%;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .overall-progress-bar {
+            height: 30px;
+            background: rgb(107, 107, 107);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .results-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results-container.active {
+            display: block;
+        }
+
+        .result-item {
+            margin-bottom: 25px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-header {
+            background: #6d6d6d;
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .result-content {
+            background: #f8f9ff;
+            border: 2px solid #6d6d6d;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .result-content p {
+            margin: 10px 0;
+            line-height: 1.8;
+            color: #333;
+            font-size: 1.05em;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .copy-btn, .download-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .copy-btn:hover, .download-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .loading-animation {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .loading-animation.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6d6d6d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .info-box h4 {
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+
+        .info-box p {
+            color: #555;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Image To Text</h1>
+            <p>by Kalihati SyberLink</p>
+        </div>
+
+
+        <div class="language-selector">
+            <label for="languageSelect">📖 Select Language:</label>
+            <select id="languageSelect">
+                <option value="eng">English</option>
+                <option value="ben">বাংলা (Bengali)</option>
+                <option value="ara">العربية (Arabic)</option>
+                <option value="chs">中文 (Chinese Simplified)</option>
+                <option value="cht">中文 (Chinese Traditional)</option>
+                <option value="hrv">Hrvatski (Croatian)</option>
+                <option value="ces">Čeština (Czech)</option>
+                <option value="dan">Dansk (Danish)</option>
+                <option value="nld">Nederlands (Dutch)</option>
+                <option value="fin">Suomi (Finnish)</option>
+                <option value="fre">Français (French)</option>
+                <option value="ger">Deutsch (German)</option>
+                <option value="gre">Ελληνικά (Greek)</option>
+                <option value="hun">Magyar (Hungarian)</option>
+                <option value="kor">한국어 (Korean)</option>
+                <option value="ita">Italiano (Italian)</option>
+                <option value="jpn">日本語 (Japanese)</option>
+                <option value="pol">Polski (Polish)</option>
+                <option value="por">Português (Portuguese)</option>
+                <option value="rus">Русский (Russian)</option>
+                <option value="spa">Español (Spanish)</option>
+                <option value="swe">Svenska (Swedish)</option>
+                <option value="tur">Türkçe (Turkish)</option>
+            </select>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">⛶</div>
+            <h3>Click or Drag & Drop Images Here</h3>
+            <p>Supports: JPG, PNG, GIF, BMP, PDF | Max 100MB per file</p>
+            <input type="file" id="fileInput" accept="image/*,.pdf" multiple>
+        </div>
+
+        <div class="files-preview" id="filesPreview"></div>
+
+        <div class="loading-animation" id="loadingAnimation">
+            <div class="spinner"></div>
+            <p id="loadingText">Processing images... Please wait</p>
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-info" id="progressInfo">Initializing...</div>
+            <div class="overall-progress">
+                <div class="overall-progress-bar" id="overallProgressBar">0%</div>
+            </div>
+        </div>
+
+        <div class="status-message" id="statusMessage"></div>
+
+        <div class="action-buttons">
+            <button class="btn" id="resetBtn" style="display: none;">🗘 Reset</button>
+            <button class="btn" id="convertBtn" style="display: none;">╰┈➤ Convert</button>
+        </div>
+
+        <div class="results-container" id="resultsContainer"></div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const filesPreview = document.getElementById('filesPreview');
+        const convertBtn = document.getElementById('convertBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressInfo = document.getElementById('progressInfo');
+        const overallProgressBar = document.getElementById('overallProgressBar');
+        const statusMessage = document.getElementById('statusMessage');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const loadingAnimation = document.getElementById('loadingAnimation');
+        const loadingText = document.getElementById('loadingText');
+        const languageSelect = document.getElementById('languageSelect');
+
+        let selectedFiles = [];
+
+        // Free OCR.space API keys (public, rotated)
+        const API_KEYS = [
+            'K87899142388957',
+            'helloworld',
+            'K82438409488957'
+        ];
+        let currentKeyIndex = 0;
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(Array.from(e.target.files));
+        });
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFiles(Array.from(e.dataTransfer.files));
+        });
+
+        function handleFiles(files) {
+            const validFiles = files.filter(file => {
+                const isImage = file.type.startsWith('image/');
+                const isPdf = file.type === 'application/pdf';
+                const maxSize = 100 * 1024 * 1024; // 100MB
+                const isValidSize = file.size <= maxSize;
+                
+                if (!isValidSize) {
+                    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                    showStatus(`⚠️ ${file.name} is too large (${sizeMB}MB). Max size: 100MB`, 'error');
+                    return false;
+                }
+                
+                return isImage || isPdf;
+            });
+            
+            if (validFiles.length === 0) {
+                showStatus('⚠️ Please select valid image files (max 1MB each)!', 'error');
+                return;
+            }
+
+            selectedFiles = [...selectedFiles, ...validFiles];
+            displayFilesPreviews();
+            convertBtn.style.display = 'inline-block';
+            resetBtn.style.display = 'inline-block';
+            resultsContainer.classList.remove('active');
+            statusMessage.classList.remove('active');
+        }
+
+        function displayFilesPreviews() {
+            filesPreview.innerHTML = '';
+            
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    
+                    const imgSrc = file.type === 'application/pdf' 
+                        ? 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150"><rect width="150" height="150" fill="%23667eea"/><text x="50%" y="50%" fill="white" font-size="20" text-anchor="middle" dy=".3em">PDF</text></svg>'
+                        : e.target.result;
+                    
+                    fileItem.innerHTML = `
+                        <img src="${imgSrc}" alt="${file.name}">
+                        <button class="remove-btn" onclick="removeFile(${index})">×</button>
+                        <div class="file-name" title="${file.name}">${file.name}</div>
+                    `;
+                    filesPreview.appendChild(fileItem);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            filesPreview.classList.add('active');
+        }
+
+        window.removeFile = function(index) {
+            selectedFiles.splice(index, 1);
+            
+            if (selectedFiles.length === 0) {
+                filesPreview.classList.remove('active');
+                convertBtn.style.display = 'none';
+                resetBtn.style.display = 'none';
+            } else {
+                displayFilesPreviews();
+            }
+        };
+
+        convertBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) return;
+
+            convertBtn.disabled = true;
+            loadingAnimation.classList.add('active');
+            progressContainer.classList.add('active');
+            resultsContainer.innerHTML = '';
+            resultsContainer.classList.remove('active');
+            
+            const language = languageSelect.value;
+            const langName = languageSelect.options[languageSelect.selectedIndex].text;
+            showStatus(`🔄 Processing ${selectedFiles.length} file(s) in ${langName}...`, 'processing');
+
+            const results = [];
+
+            try {
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    const progress = Math.round(((i + 1) / selectedFiles.length) * 100);
+                    
+                    progressInfo.textContent = `Processing: ${file.name} (${i + 1}/${selectedFiles.length})`;
+                    overallProgressBar.style.width = progress + '%';
+                    overallProgressBar.textContent = `${progress}%`;
+                    loadingText.textContent = `Processing ${file.name}...`;
+
+                    try {
+                        const base64 = await getBase64(file);
+                        const text = await extractTextFromImage(base64, language);
+                        
+                        results.push({
+                            file: file.name,
+                            text: text || 'No text found',
+                            success: text && text.length > 0
+                        });
+
+                        // Small delay to avoid rate limiting
+                        await new Promise(resolve => setTimeout(resolve, 500));
+
+                    } catch (error) {
+                        console.error('Error processing file:', file.name, error);
+                        results.push({
+                            file: file.name,
+                            text: `Error: ${error.message}`,
+                            success: false
+                        });
+                    }
+                }
+
+                displayResults(results);
+                const successCount = results.filter(r => r.success && r.text !== 'No text found').length;
+                showStatus(`✅ Successfully extracted text from ${successCount} out of ${selectedFiles.length} file(s)!`, 'success');
+
+            } catch (error) {
+                console.error('Overall error:', error);
+                showStatus('❌ Error processing images. Please try again.', 'error');
+            } finally {
+                convertBtn.disabled = false;
+                loadingAnimation.classList.remove('active');
+                setTimeout(() => {
+                    progressContainer.classList.remove('active');
+                    overallProgressBar.style.width = '0%';
+                }, 1000);
+            }
+        });
+
+        async function extractTextFromImage(base64Image, language) {
+            const apiKey = API_KEYS[currentKeyIndex];
+            
+            const formData = new FormData();
+            formData.append('base64Image', `data:image/png;base64,${base64Image}`);
+            formData.append('language', language);
+            formData.append('isOverlayRequired', 'false');
+            formData.append('detectOrientation', 'true');
+            formData.append('scale', 'true');
+            formData.append('OCREngine', '2');
+            formData.append('isTable', 'true');
+
+            try {
+                const response = await fetch('https://api.ocr.space/parse/image', {
+                    method: 'POST',
+                    headers: {
+                        'apikey': apiKey
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.IsErroredOnProcessing) {
+                    // Try next API key
+                    currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+                    throw new Error(data.ErrorMessage?.[0] || 'OCR processing failed');
+                }
+
+                if (data.ParsedResults && data.ParsedResults.length > 0) {
+                    const parsedText = data.ParsedResults[0].ParsedText;
+                    
+                    // Clean and format line by line
+                    const lines = parsedText
+                        .split(/\r?\n/)
+                        .map(line => line.trim())
+                        .filter(line => line.length > 0);
+                    
+                    return lines.join('\n');
+                }
+
+                return 'No text found';
+
+            } catch (error) {
+                console.error('OCR API Error:', error);
+                throw error;
+            }
+        }
+
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function displayResults(results) {
+            resultsContainer.innerHTML = '';
+            
+            results.forEach((result, index) => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                
+                const resultHeader = document.createElement('div');
+                resultHeader.className = 'result-header';
+                resultHeader.innerHTML = `
+                    <span>📄 ${result.file}</span>
+                    <div class="result-actions">
+                        <button class="copy-btn" onclick="copyText(${index})">📋 Copy</button>
+                        <button class="download-btn" onclick="downloadText(${index})">💾 Download</button>
+                    </div>
+                `;
+                
+                const resultContent = document.createElement('div');
+                resultContent.className = 'result-content';
+                resultContent.id = `result-${index}`;
+                
+                if (!result.success && result.text.startsWith('Error:')) {
+                    resultContent.innerHTML = `<p style="color: #d32f2f; font-weight: bold;">${result.text}</p>`;
+                } else if (result.text === 'No text found' || result.text.length < 2) {
+                    resultContent.innerHTML = '<p style="color: #999; font-style: italic;">❌ No text detected. Try a clearer image or check the language setting.</p>';
+                } else {
+                    // Display each line separately with line numbers
+                    const lines = result.text.split(/\r?\n/).filter(l => l.trim());
+                    
+                    lines.forEach((line, lineIndex) => {
+                        const lineDiv = document.createElement('div');
+                        lineDiv.style.cssText = 'display: flex; gap: 10px; margin: 8px 0; padding: 8px; background: white; border-radius: 5px; border-left: 3px solid #667eea;';
+                        
+                        const lineNumber = document.createElement('span');
+                        lineNumber.style.cssText = 'color: #667eea; font-weight: bold; min-width: 35px; font-size: 0.9em;';
+                        lineNumber.textContent = `${lineIndex + 1}.`;
+                        
+                        const lineText = document.createElement('span');
+                        lineText.style.cssText = 'flex: 1; color: #333;';
+                        lineText.textContent = line;
+                        
+                        lineDiv.appendChild(lineNumber);
+                        lineDiv.appendChild(lineText);
+                        resultContent.appendChild(lineDiv);
+                    });
+                }
+                
+                resultItem.appendChild(resultHeader);
+                resultItem.appendChild(resultContent);
+                resultsContainer.appendChild(resultItem);
+            });
+            
+            resultsContainer.classList.add('active');
+        }
+
+        window.copyText = function(index) {
+            const resultDiv = document.getElementById(`result-${index}`);
+            const text = resultDiv.innerText;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showStatus('✅ Text copied to clipboard!', 'success');
+                setTimeout(() => statusMessage.classList.remove('active'), 2000);
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                showStatus('❌ Failed to copy text', 'error');
+            });
+        };
+
+        window.downloadText = function(index) {
+            const resultDiv = document.getElementById(`result-${index}`);
+            const text = resultDiv.innerText;
+            const fileName = selectedFiles[index].name.replace(/\.[^/.]+$/, '') + '.txt';
+            
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showStatus('✅ Text file downloaded!', 'success');
+            setTimeout(() => statusMessage.classList.remove('active'), 2000);
+        };
+
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message active ' + type;
+        }
+
+        resetBtn.addEventListener('click', () => {
+            selectedFiles = [];
+            fileInput.value = '';
+            filesPreview.innerHTML = '';
+            filesPreview.classList.remove('active');
+            resultsContainer.innerHTML = '';
+            resultsContainer.classList.remove('active');
+            progressContainer.classList.remove('active');
+            statusMessage.classList.remove('active');
+            loadingAnimation.classList.remove('active');
+            convertBtn.style.display = 'none';
+            resetBtn.style.display = 'none';
+            overallProgressBar.style.width = '0%';
+        });
+    </script>
+</body>
+</html>
