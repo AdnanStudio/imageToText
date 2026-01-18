@@ -694,18 +694,33 @@
                     
                     lines.forEach((line, lineIndex) => {
                         const lineDiv = document.createElement('div');
-                        lineDiv.style.cssText = 'display: flex; gap: 10px; margin: 8px 0; padding: 8px; background: white; border-radius: 5px; border-left: 3px solid #667eea;';
-                        
-                        const lineNumber = document.createElement('span');
-                        lineNumber.style.cssText = 'color: #667eea; font-weight: bold; min-width: 35px; font-size: 0.9em;';
-                        lineNumber.textContent = `${lineIndex + 1}.`;
+                        lineDiv.style.cssText = 'display: flex; gap: 10px; margin: 8px 0; padding: 8px; background: white; border-radius: 5px; border-left: 3px solid #667eea; align-items: center;';
                         
                         const lineText = document.createElement('span');
                         lineText.style.cssText = 'flex: 1; color: #333;';
                         lineText.textContent = line;
                         
-                        lineDiv.appendChild(lineNumber);
+                        const copyLineBtn = document.createElement('button');
+                        copyLineBtn.style.cssText = 'background: #667eea; color: white; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-size: 0.85em; white-space: nowrap;';
+                        copyLineBtn.textContent = '📋 Copy';
+                        copyLineBtn.onclick = () => {
+                            // Extract text after colon if exists, otherwise copy full line
+                            let textToCopy = line;
+                            if (line.includes(':')) {
+                                const parts = line.split(':');
+                                textToCopy = parts.slice(1).join(':').trim();
+                            }
+                            
+                            navigator.clipboard.writeText(textToCopy).then(() => {
+                                copyLineBtn.textContent = '✅ Copied!';
+                                setTimeout(() => {
+                                    copyLineBtn.textContent = '📋 Copy';
+                                }, 1500);
+                            });
+                        };
+                        
                         lineDiv.appendChild(lineText);
+                        lineDiv.appendChild(copyLineBtn);
                         resultContent.appendChild(lineDiv);
                     });
                 }
